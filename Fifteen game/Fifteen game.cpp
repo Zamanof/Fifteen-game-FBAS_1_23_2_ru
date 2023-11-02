@@ -36,7 +36,8 @@ int main() {
 	}
 	else
 	{
-		cout << "Goodbye"<<endl;
+		cout << "Goodbye Lennon"<<endl;
+		cout << "Goodbye Lennon"<<endl;
 		return 0;
 	}
 
