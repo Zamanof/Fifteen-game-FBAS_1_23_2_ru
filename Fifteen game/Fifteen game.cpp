@@ -37,18 +37,93 @@ void generateLogin(char* name, char* surname, char* login, int age) {
 	strcat_s(login, 20, random);
 }
 
-bool registration(char* name, char* surname, char* login, int age) {
-	generateLogin(name, surname, login, age);
-
-	return false;
+bool isUser(User* users, User user, int length) {
+	if (users != nullptr) {
+		for (size_t i = 0; i < length; i++)
+		{
+			if (strcmp(user.login, users[i].login) == 0) {
+				return true;
+			}
+		}
+	}
+	else {
+		return false;
+	}
 }
-bool login(char* login, char* pass) {
-	return true;
+
+User* registration(char* name, char* surname, char* login, int age, User* users, int& length) {
+	generateLogin(name, surname, login, age);
+	User user;
+	strcpy_s(user.name, 20, name);
+	strcpy_s(user.surname, 20, surname);
+	strcpy_s(user.login, 20, login);
+	user.age = age;
+	if (!isUser(users, user, length))
+	{
+		cout << "Your login is " << user.login << endl;
+		char pass[20];
+		char confirm[20];
+		char symbol{};
+		int i = 0;
+		cin.ignore();
+		puts("Enter your password: ");
+		do {
+			symbol = _getch();
+			pass[i++] = symbol;
+			_putch('*');
+		} while (symbol != 13 && i < 18);
+		pass[i - 1] = '\0';
+		puts("\nConfirm your password: ");
+		symbol = 0;
+		i = 0;
+		do {
+			symbol = _getch();
+			confirm[i++] = symbol;
+			_putch('*');
+		} while (symbol != 13 && i < 18);
+		confirm[i - 1] = '\0';
+		cout << '\n';
+		if (strcmp(pass, confirm) == 0)
+		{
+			strcpy_s(user.password, 20, pass);
+		}
+		else {
+			puts("Incorrect password");
+		}
+		User* tmp = new User[length + 1];
+		for (int i = 0; i < length; i++)
+		{
+			tmp[i] = users[i];
+		}
+		tmp[length] = user;
+		delete[] users;
+		length++;
+		return tmp;
+	}
+	else {
+		cout << "User already registered" << endl;
+		return nullptr;
+	}
+
+}
+bool login(char* login, char* pass, User* users, int length, User& user) {
+	if (isUser) {
+		for (size_t i = 0; i < length; i++)
+		{
+			if (strcmp(login, users[i].login) == 0 && pass == users[i].password) {
+				user = users[i];
+				return true;
+			}
+		}
+	}
+	return false;
+
 }
 
 int main() {
 	User user;
-
+	int length = 0;
+	User* users = nullptr;
 	srand(time(NULL));
 	short game_field[4][4]{};
 	int choice{};
@@ -71,69 +146,60 @@ int main() {
 		"   Sign up            ",
 		"   Exit               "
 	};
-
-	choice = menuChoice(startMenu, 3);
-
-	switch (choice)
+	bool exit = true;
+	while (exit)
 	{
-	case 0:
-		puts("Enter login: ");
-		gets_s(user.login, 20);
-		puts("Enter password: ");
-		gets_s(user.password, 20);
-		login(user.login, user.password);
-		break;
-	case 1:
-		puts("Enter name: ");
-		gets_s(user.name, 20);
-		puts("Enter last name: ");
-		gets_s(user.surname, 20);
-		puts("Enter your age: ");
-		cin >> user.age;
-		isUser = registration(user.name, user.surname, user.login, user.age);
-		if (!isUser) {
-			cout << "Your login is " << user.login << endl;
-			char pass[20];
-			char confirm[20];
-			char symbol{};
+		User* check{};
+		char symbol = 0;
 			int i = 0;
-			cin.ignore();
-			puts("Enter your password: ");
-			 do{
+			char pass[20]{};
+		choice = menuChoice(startMenu, 3);
+		switch (choice)
+		{
+		case 0:
+			puts("Enter login: ");
+			gets_s(user.login, 20);
+			puts("Enter password: ");
+			
+			do {
 				symbol = _getch();
 				pass[i++] = symbol;
 				_putch('*');
-			 } while (symbol != 13 && i < 18);
-			pass[i-1] = '\0';
-			puts("\nConfirm your password: ");
-			symbol = 0;
-			i = 0;
-			do{
-				symbol = _getch();
-				confirm[i++] = symbol;
-				_putch('*');
 			} while (symbol != 13 && i < 18);
-			confirm[i-1] = '\0';
-			cout << '\n';
-			if (strcmp(pass, confirm) == 0)
-			{
-				strcpy_s(user.password, 20, pass);
+			pass[i - 1] = '\0';
+			strcpy_s(user.password, 20, pass);
+			if (login(user.login, user.password, users, length, user)) {
+				fill_game_fields(user.game_field);
+				exit = false;
 			}
 			else {
-				puts("Incorrect password");
+				cout << "Incorrect login or password" << endl;
+				system("pause");
 			}
+			break;
+		case 1:
+
+			puts("Enter name: ");
+			gets_s(user.name, 20);
+			puts("Enter last name: ");
+			gets_s(user.surname, 20);
+			puts("Enter your age: ");
+			cin >> user.age;
+			check = registration(user.name, user.surname, user.login, user.age, users, length);
+			if (check != nullptr) {
+				users = check;
+			}
+			break;
+		case 2:
+			return 0;
+			break;
 		}
-		else {
-			puts("User is already registered");
-		}
-		break;
-	case 2:
-		return 0;
-		break;
+		system("cls");
 	}
 
-	system("pause");
-	fill_game_fields(game_field);
+
+
+
 	choice = menuChoice(gameMenu, 3);
 	if (choice == 0) {
 		choice = menuChoice(levelMenu, 3);
