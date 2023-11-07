@@ -49,9 +49,40 @@ bool isUser(User* users, User user, int length) {
 	else {
 		return false;
 	}
+	return false;
+}
+
+void saveFileUsers(User* users, int& length) {
+
+	FILE* file;
+	fopen_s(&file, "length.dat", "wb");
+	fwrite((char*)&length, sizeof(int), 1, file);
+	fclose(file);
+
+	fopen_s(&file, "game.dat", "wb");
+	fwrite((char*)users, sizeof(User), length, file);
+	fclose(file);
+}
+
+User* loadFileUsers(User* users, int& length) {
+
+	FILE* file;
+	fopen_s(&file, "length.dat", "rb");
+	fread((char*)&length, sizeof(int), 1, file);
+	fclose(file);
+	
+	User* tmp = new User[length];
+
+	fopen_s(&file, "game.dat", "rb");
+	fread((char*)tmp, sizeof(User), length, file);
+	fclose(file);
+	delete[] users;
+	return tmp;
 }
 
 User* registration(char* name, char* surname, char* login, int age, User* users, int& length) {
+	cout << name << endl;
+
 	generateLogin(name, surname, login, age);
 	User user;
 	strcpy_s(user.name, 20, name);
@@ -59,7 +90,7 @@ User* registration(char* name, char* surname, char* login, int age, User* users,
 	strcpy_s(user.login, 20, login);
 	user.age = age;
 	if (!isUser(users, user, length))
-	{
+ 	{
 		cout << "Your login is " << user.login << endl;
 		char pass[20];
 		char confirm[20];
@@ -106,24 +137,31 @@ User* registration(char* name, char* surname, char* login, int age, User* users,
 	}
 
 }
-bool login(char* login, char* pass, User* users, int length, User& user) {
+bool login(char* login, char* pass, User* users, int length, User& user, int& index) {
 	if (isUser) {
 		for (size_t i = 0; i < length; i++)
 		{
-			if (strcmp(login, users[i].login) == 0 && pass == users[i].password) {
+			if (strcmp(login, users[i].login) == 0 && strcmp(pass, users[i].password) == 0) {
 				user = users[i];
+				index = i;
 				return true;
 			}
 		}
+		return false;
 	}
 	return false;
 
 }
 
 int main() {
+
 	User user;
 	int length = 0;
-	User* users = nullptr;
+	/*User* users = new User[length]{ {"Nadir", "Zamanov", "Admin", "P@ss1234", 43}};
+	saveFileUsers(users, length);*/
+	int index{};
+	User* users{};
+	users = loadFileUsers(users, length);
 	srand(time(NULL));
 	short game_field[4][4]{};
 	int choice{};
@@ -151,16 +189,17 @@ int main() {
 	{
 		User* check{};
 		char symbol = 0;
-			int i = 0;
-			char pass[20]{};
+		int i = 0;
+		char pass[20]{};
 		choice = menuChoice(startMenu, 3);
+		
 		switch (choice)
 		{
 		case 0:
 			puts("Enter login: ");
 			gets_s(user.login, 20);
 			puts("Enter password: ");
-			
+
 			do {
 				symbol = _getch();
 				pass[i++] = symbol;
@@ -168,8 +207,8 @@ int main() {
 			} while (symbol != 13 && i < 18);
 			pass[i - 1] = '\0';
 			strcpy_s(user.password, 20, pass);
-			if (login(user.login, user.password, users, length, user)) {
-				fill_game_fields(user.game_field);
+			if (login(user.login, user.password, users, length, user, index)) {
+				fill_game_fields(users[index].game_field);
 				exit = false;
 			}
 			else {
@@ -185,10 +224,12 @@ int main() {
 			gets_s(user.surname, 20);
 			puts("Enter your age: ");
 			cin >> user.age;
+			strcpy_s(user.login, 20, "");
 			check = registration(user.name, user.surname, user.login, user.age, users, length);
 			if (check != nullptr) {
 				users = check;
 			}
+			saveFileUsers(users, length);
 			break;
 		case 2:
 			return 0;
@@ -203,25 +244,25 @@ int main() {
 	choice = menuChoice(gameMenu, 3);
 	if (choice == 0) {
 		choice = menuChoice(levelMenu, 3);
-		start_position(game_field, choice);
+		start_position(users[index].game_field, choice);
 	}
 	else if (choice == 1) {
-		loadFile(game_field);
 	}
 	else
 	{
 		return 0;
 	}
 
-	show_fields(game_field);
+	show_fields(users[index].game_field);
 
-	while (!is_win(game_field))
+	while (!is_win(users[index].game_field))
 	{
 		key = _getch(); // 224
 		key = _getch();
-		move(game_field, key);
+		move(users[index].game_field, key);
+		saveFileUsers(users, length);
 		system("cls");
-		show_fields(game_field);
+		show_fields(users[index].game_field);
 
 	}
 

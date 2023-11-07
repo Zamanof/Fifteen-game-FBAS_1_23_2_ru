@@ -47,7 +47,7 @@ void move(short fields[][4], unsigned char key) {
 		}
 		break;
 	}
-	saveFile(fields);
+	/*saveFile(fields);*/
 }
 
 void start_position(short fields[][4], const int level) {
